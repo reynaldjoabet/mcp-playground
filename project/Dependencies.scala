@@ -3,12 +3,12 @@ import sbt.*
 object Dependencies {
 
   private object Versions {
-    val munit = "0.7.29"
-    val bouncycastle = "1.84"
+    val munit = "1.3.4"
+    val bouncycastle = "1.85"
     val password4j = "1.8.4"
-    val auth0 = "4.5.1"
-    val nimbusJwt = "10.9"
-    val nimbusOidc = "11.37"
+    val auth0 = "4.5.2"
+    val nimbusJwt = "10.9.1"
+    val nimbusOidc = "11.38.1"
   }
   lazy val munit = "org.scalameta" %% "munit" % Versions.munit
   lazy val auth0 = "com.auth0" % "java-jwt" % Versions.auth0
