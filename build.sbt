@@ -1,7 +1,7 @@
 import Dependencies.*
 
 scalaVersion := "3.3.8"
-version := "0.1.0-SNAPSHOT"
+version      := "0.1.0-SNAPSHOT"
 //organization := "com.example"
 ThisBuild / semanticdbEnabled := true
 
@@ -25,12 +25,12 @@ ThisBuild / scalacOptions := Seq(
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 publishMavenStyle := true
-licenses := Seq(License.Apache2)
-homepage := Some(url("https://github.com/example/mcp-playground"))
+licenses          := Seq(License.Apache2)
+homepage          := Some(uri("https://github.com/example/mcp-playground"))
 
 lazy val root = rootProject
   .settings(
-    name := "mcp-playground",
+    name                 := "mcp-playground",
     libraryDependencies ++= Seq(
       munit % Test,
       bouncycastle,
