@@ -4,10 +4,10 @@ object Dependencies {
 
   private object Versions {
 
-    val munit        = "1.3.5"
-    val bouncycastle = "1.85"
+    val munit        = "1.3.6"
+    val bouncycastle = "1.86"
     val password4j   = "1.8.4"
-    val auth0        = "4.6.0"
+    val auth0        = "4.6.1"
     val nimbusJwt    = "10.9.1"
     val nimbusOidc   = "11.38.2"
 
