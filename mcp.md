@@ -78,3 +78,69 @@ OpenID Connect has become the de-facto internet standard for single sign-on and 
 To support the provision of verified identities the core OpenID Connect protocol is extended in two places:
 - A `verified_claims` element is defined for the optional claims OpenID authentication request parameter.
 - A `verified_claims` element, or container, is defined for the ID token or UserInfo to return the verified claims and data about the verification itself.
+
+
+[how-to-set-up-an-authorization-server-for-an-mcp-server](https://www.authlete.com/resources/blog/how-to-set-up-an-authorization-server-for-an-mcp-service)
+
+
+![alt text](image-3.png)
+
+## How OAuth 2.1 reframes the problem
+
+The move is that the MCP server stops trusting the *client* and starts trusting the *token*. Three parties, three separate decisions:
+
+- The authorization server decides **who** gets a token and with which scopes.
+- The token carries **what** the bearer may do, **for how long**, and — the MCP-specific part — **at which resource**.
+- The MCP server, as resource server, decides only whether *this* token authorises *this* request. It never needs to know who the client is.
+
+Scoped plus time-limited is what buys least privilege and revocation.
+
+Audience binding is not optional here. The client MUST send `resource=<canonical MCP server URI>` (RFC 8707) on both the authorization request and the token request, and the MCP server MUST reject any token not issued for it. Skip that and a token minted for one MCP server replays against every other server trusting the same AS. Relatedly, token passthrough is flatly forbidden: if the MCP server calls an upstream API it acts as a client there and uses a *separate* token, never the one it received.
+
+Scoped tokens answer "what may this request do". They say nothing about who the client is — that's the next problem.
+
+## CIMD — the client_id *is* a URL the client hosts
+
+Standard OAuth assumed registration was a controlled, human-administered step. MCP breaks that: clients spin up on demand with no prior relationship to the server. CIMD ([draft-ietf-oauth-client-id-metadata-document](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-00)) closes the gap by making the client identifier a URL that resolves to the client's own metadata, fetched on demand. No registration table, no cleanup of stale registrations.
+
+Constraints on the `client_id` URL: `https` scheme, MUST contain a path component, MUST NOT contain a fragment, SHOULD NOT carry a query string, no userinfo, no dot-segments. The document it returns MUST contain a `client_id` property equal to that URL under simple string comparison (RFC 3986 §6.2.1), and for MCP at least `client_id`, `client_name`, `redirect_uris`.
+
+```json
+{
+  "client_id": "https://app.example.com/oauth/client-metadata.json",
+  "client_name": "Example MCP Client",
+  "redirect_uris": ["http://127.0.0.1:3000/callback"],
+  "grant_types": ["authorization_code"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none"
+}
+```
+
+Note what can't appear: `client_secret` and `client_secret_expires_at` are omitted outright, and `client_secret_basic` / `client_secret_post` / `client_secret_jwt` are unusable. Same reasoning as RFC 8252 above — a symmetric secret reachable by every instance fetching the same document authenticates nothing. `private_key_jwt` with a JWKS is the way a CIMD client becomes confidential, which is the direct analogue of the per-instance asymmetric key in the native-app section.
+
+What the AS does with it: SHOULD fetch the document on encountering a URL-shaped `client_id`, MUST check the embedded `client_id` matches the URL exactly, MUST validate the request's `redirect_uri` against the document by exact match, SHOULD respect HTTP cache headers, MUST NOT cache error responses or malformed documents, and SHOULD cap the response size (the draft suggests 5 KB).
+
+## What CIMD does not give you
+
+It is worth being blunt about this, because the vendor framing ("a CIMD-compliant authorization server governs how clients register") oversells it. **CIMD does not authenticate the client.** A URL client_id is an unverified assertion that happens to be dereferenceable. Two concrete holes the draft itself names:
+
+- **Localhost impersonation.** An attacker presents the *legitimate* client's metadata URL as their `client_id`, binds any localhost port, and offers that as `redirect_uri`. The AS fetches the real document, the consent screen shows the real client name, and the code lands on the attacker's listener. Since MCP clients are overwhelmingly local processes with loopback redirects, this is the common case, not the exotic one. Mitigations are all on the AS: warn on localhost-only redirect URIs, display the redirect hostname, require attestation.
+- **SSRF.** The AS now takes a URL from an unauthenticated stranger and fetches it. That is a request generator pointed at the AS's own network position. It SHOULD refuse private and loopback addresses and non-HTTP schemes.
+
+So the governance lives in the AS's *trust policy* layered on top — domain allowlists for protected servers, any-HTTPS for open ones, reputation or domain-age checks, prominent display of the `client_id` hostname (and a prefetched, cached `logo_uri`, so the logo can't change after moderation). CIMD supplies a stable, fetchable identity to *apply* a policy to; it is not the policy.
+
+## Where MCP actually puts it
+
+In the 2025-11-25 auth spec, CIMD is **SHOULD** for both clients and authorization servers, and RFC 7591 dynamic client registration is demoted to **MAY**, kept for backwards compatibility with earlier revisions. The client's selection order:
+
+1. Pre-registered credentials, if it has them for this server.
+2. CIMD, if the AS advertises `client_id_metadata_document_supported: true` in its AS metadata.
+3. DCR, if the AS advertises a `registration_endpoint`.
+4. Prompt the user to paste client details.
+
+"Recommended", then — not "essential". A pre-registered client is still the stronger position where a relationship exists; CIMD is what you reach for precisely when there isn't one.
+
+[draft-ietf-oauth-client-id-metadata-document-00](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-00) · [MCP authorization (2025-11-25)](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
+
+
+Once the server validates the token's authenticity, it looks inside the token payload to check the permissions

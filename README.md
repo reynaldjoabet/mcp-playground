@@ -494,3 +494,6 @@ that sets it as a per-project common setting, which is not what you want for a m
 
 `Global` is a special scope that sits above all projects, subprojects, and configurations. A setting scoped to `Global` has exactly one value for the entire sbt session, regardless of which project is active. That's why the cache location and size live there — they're inherently not per-project concepts.
 `Global / fileCacheSize := "512M"`
+
+
+PKCE solves this by introducing a dynamic, one-time secret for every login flow
