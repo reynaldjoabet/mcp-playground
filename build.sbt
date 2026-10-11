@@ -40,3 +40,8 @@ lazy val root = rootProject
       nimbusdsOauth2OidcSdk
     )
   )
+
+Global / mcpEnabled     := true        // default: false
+Global / mcpDisableInCI := true        // default: true; set false to allow startup in CI/Heroku
+Global / mcpPort        := 5020        // default: 5010
+Global / mcpHost        := "127.0.0.1" // default: loopback only
