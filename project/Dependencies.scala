@@ -7,7 +7,7 @@ object Dependencies {
     val munit        = "1.3.6"
     val bouncycastle = "1.86"
     val password4j   = "1.8.4"
-    val auth0        = "4.6.1"
+    val auth0        = "4.6.2"
     val nimbusJwt    = "10.10"
     val nimbusOidc   = "11.38.2"
 
