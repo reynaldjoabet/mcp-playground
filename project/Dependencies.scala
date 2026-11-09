@@ -9,7 +9,7 @@ object Dependencies {
     val password4j   = "1.8.4"
     val auth0        = "4.6.2"
     val nimbusJwt    = "10.10"
-    val nimbusOidc   = "11.38.2"
+    val nimbusOidc   = "11.39"
 
   }
   lazy val munit      = "org.scalameta" %% "munit"      % Versions.munit
