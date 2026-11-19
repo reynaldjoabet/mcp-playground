@@ -1,9 +1,7 @@
 import Dependencies.*
 
-ThisBuild / scalaVersion := "3.10.0"
+ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / version      := "0.1.0-SNAPSHOT"
-
-ThisBuild / crossScalaVersions := Seq("3.3.8", "3.9.0")
 
 ThisBuild / scalacOptions := Seq(
   "-encoding",
@@ -43,5 +41,5 @@ lazy val root = rootProject
 
 Global / mcpEnabled     := true        // default: false
 Global / mcpDisableInCI := true        // default: true; set false to allow startup in CI/Heroku
-Global / mcpPort        := 5020        // default: 5010
+Global / mcpPort        := Some(5020)  // Option[Int] since 0.2.0
 Global / mcpHost        := "127.0.0.1" // default: loopback only
