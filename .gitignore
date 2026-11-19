@@ -33,3 +33,6 @@ web/.DS_Store
 .vscode/
 .metals/
 .scala-build/
+
+# SemanticDB for the build definition, written on reload when semanticdbEnabled is set globally
+*.sbt.semanticdb
